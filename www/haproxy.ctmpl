@@ -1,0 +1,46 @@
+global
+        # Defaults
+        #log /dev/log    local0
+        #log /dev/log    local1 notice
+        #chroot /var/lib/haproxy
+
+        maxconn 2048
+        # Max size of  temporary generated DHE keys
+        tune.ssl.default-dh-param 2048
+
+defaults
+        # Defaults
+        log     global
+        mode    http
+        option  httplog
+        option  dontlognull
+        timeout connect 5000
+        timeout client 50000
+        timeout server 50000
+
+        # Add X-Forwarded-For header
+        option forwardfor
+        # Close connections but maintain keepalives - reduces latency
+        option http-server-close
+
+# HTTP frontend
+frontend www-http
+    # Bind address
+    bind 0.0.0.0:80
+    # Add protocol header
+    reqadd X-Forwarded-Proto:\ http
+    # Defautl backend
+    default_backend www-backend
+
+# HTTPS frontend
+frontend www-https
+    # PEM Format serevr key pair
+    bind 0.0.0.0:443 ssl crt /etc/ssl/private/server.pem ca-file /etc/ssl/private/ca.crt verify required
+    http-request set-header X-SSL-Client-CN %{+Q}[ssl_c_s_dn(cn)]
+    http-request set-header X-SSL-Client-DN %{+Q}[ssl_c_s_dn]
+    default_backend www-backend
+
+backend www-backend
+    # Reirect HTTP to HTTPS
+    redirect scheme https if !{ ssl_fc }
+    server www-1 backend:3000 check
