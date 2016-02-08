@@ -1,8 +1,12 @@
 # Usage
 
-# Add docker URL to /etc/hosts for example.com
+* Setup TLS:
 
-    curl -v -E www/client.pfx:pass --cacert www/ca.crt https://example.com:8443
+    $> cd www; ./ssl.sh
+
+* Add docker URL to /etc/hosts for example.com
+
+    $> curl -v -E www/client.pfx:pass --cacert www/ca.crt https://example.com:8443
 
 # References
 
